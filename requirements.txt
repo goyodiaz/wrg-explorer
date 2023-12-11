@@ -1,4 +1,5 @@
+affine<2.5
 matplotlib<3.9
 rasterio<1.4
-affine<2.5
+streamlit<1.30
 wrg --pre
