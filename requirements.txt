@@ -1,0 +1,4 @@
+matplotlib<3.9
+rasterio<1.4
+affine<2.5
+wrg --pre

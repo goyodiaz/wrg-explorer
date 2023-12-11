@@ -1,0 +1,120 @@
+# -*- coding: utf-8 -*-
+#
+# Copyright 2023 Goyo <goyodiaz@gmail.com>
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
+# MA 02110-1301, USA.
+
+import io
+
+import matplotlib.pyplot as plt
+import rasterio as rio
+from affine import Affine
+from wrg import WRG
+
+import streamlit as st
+
+__version__ = "0.0.1.dev"
+
+
+def on_wrg_uploaded():
+    if st.session_state.uploaded is not None:
+        st.session_state.wrg = WRG.from_file(buf=st.session_state.uploaded)
+
+
+def main():
+    st.title("WRG explorer")
+    uploaded = st.file_uploader(
+        label="Upload WRG", key="uploaded", on_change=on_wrg_uploaded
+    )
+    if uploaded is None:
+        st.stop()
+
+    wrg = st.session_state.wrg
+    left, right, bottom, top = wrg.extent()
+
+    st.markdown(f"Hub height: {wrg.hub_height()}")
+    st.markdown(f"Width: {wrg.nx}")
+    st.markdown(f"Height: {wrg.ny}")
+    st.markdown(f"Number of sectors: {wrg.nsectors}")
+    st.markdown(f"Left, right, bottom, top: {wrg.extent()}")
+
+    variable = st.selectbox(
+        label="Variable",
+        options=[
+            "Elevation",
+            "Global scale",
+            "Global shape",
+            "Global speed",
+            "Directional scale",
+            "Directional shape",
+            "Directional speed",
+            "Directional frequency",
+        ],
+    )
+    ax = plt.subplot()
+    if variable == "Elevation":
+        imdata = wrg.elev()
+    elif variable == "Global scale":
+        imdata = wrg.global_scale()
+    elif variable == "Global shape":
+        imdata = wrg.global_shape()
+    elif variable == "Global speed":
+        imdata = wrg.global_speed()
+    elif variable == "Directional scale":
+        sector = st.select_slider(label="Sector", options=range(wrg.nsectors))
+        imdata = wrg.scale()[:, :, sector]
+    elif variable == "Directional shape":
+        sector = st.select_slider(label="Sector", options=range(wrg.nsectors))
+        imdata = wrg.shape()[:, :, sector]
+    elif variable == "Directional speed":
+        sector = st.select_slider(label="Sector", options=range(wrg.nsectors))
+        imdata = wrg.speed()[:, :, sector]
+    elif variable == "Directional frequency":
+        sector = st.select_slider(label="Sector", options=range(wrg.nsectors))
+        imdata = wrg.freq()[:, :, sector]
+    im = ax.imshow(imdata, origin="lower", extent=(left, right, bottom, top))
+    cbar = ax.figure.colorbar(im)
+    st.pyplot(ax.figure)
+
+    epsg_code = st.text_input(label="EPSG code")
+    if epsg_code == "":
+        st.stop()
+
+    buf = io.BytesIO()
+    with rio.open(
+        fp=buf,
+        mode="w",
+        driver="GTiff",
+        width=wrg.nx,
+        height=wrg.ny,
+        count=1,
+        crs=rio.CRS.from_epsg(epsg_code),
+        transform=Affine.translation(xoff=left, yoff=top)
+        * Affine.scale(wrg.cell_size, -wrg.cell_size),
+        dtype=wrg.data.dtype,
+        sharing=False,  # make it thread-safe.
+    ) as tds:
+        tds.write(imdata[::-1, :], indexes=1)
+    st.download_button(
+        label="Download",
+        data=buf.getvalue(),
+        file_name=f"{variable}.tif",
+        mime="image/tiff; application=geotiff",
+    )
+
+
+if __name__ == "__main__":
+    main()
