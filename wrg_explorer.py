@@ -21,10 +21,9 @@ import io
 
 import matplotlib.pyplot as plt
 import rasterio as rio
+import streamlit as st
 from affine import Affine
 from wrg import WRG
-
-import streamlit as st
 
 __version__ = "0.0.1.dev"
 
@@ -66,12 +65,17 @@ def main():
     )
     ax = plt.subplot()
     if variable == "Elevation":
+        sector = None
         imdata = wrg.elev()
     elif variable == "Global scale":
+        sector = None
         imdata = wrg.global_scale()
     elif variable == "Global shape":
+        sector = None
         imdata = wrg.global_shape()
+        sector = None
     elif variable == "Global speed":
+        sector = None
         imdata = wrg.global_speed()
     elif variable == "Directional scale":
         sector = st.select_slider(label="Sector", options=range(wrg.nsectors))
@@ -108,10 +112,15 @@ def main():
         sharing=False,  # make it thread-safe.
     ) as tds:
         tds.write(imdata[::-1, :], indexes=1)
+
+    if sector is None:
+        file_name = f"{variable}.tif"
+    else:
+        file_name = f"{variable}_{sector:0>2}.tif"
     st.download_button(
         label="Download",
         data=buf.getvalue(),
-        file_name=f"{variable}.tif",
+        file_name=file_name,
         mime="image/tiff; application=geotiff",
     )
 
