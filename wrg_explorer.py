@@ -20,12 +20,18 @@
 import io
 
 import matplotlib.pyplot as plt
+import pyproj
 import rasterio as rio
 import streamlit as st
 from affine import Affine
 from wrg import WRG
 
 __version__ = "0.0.1.dev"
+
+
+@st.cache_resource
+def get_crss():
+    return pyproj.database.query_crs_info()
 
 
 def on_wrg_uploaded():
@@ -93,11 +99,12 @@ def main():
     cbar = ax.figure.colorbar(im)
     st.pyplot(ax.figure)
 
-    epsg_code = st.text_input(label="EPSG code")
-    if epsg_code == "":
-        crs = None
-    else:
-        crs = rio.CRS.from_epsg(epsg_code)
+    pyproj_crs = st.selectbox(
+        label="Coordinate reference system",
+        options=get_crss(),
+        index=None,
+        format_func=lambda crs: f"{crs.name} ({crs.auth_name}:{crs.code})",
+    )
 
     buf = io.BytesIO()
     with rio.open(
@@ -107,7 +114,11 @@ def main():
         width=wrg.nx,
         height=wrg.ny,
         count=1,
-        crs=crs,
+        crs=rio.crs.CRS.from_authority(
+            auth_name=pyproj_crs.auth_name, code=pyproj_crs.code
+        )
+        if pyproj_crs
+        else None,
         transform=Affine.translation(xoff=left, yoff=top)
         * Affine.scale(wrg.cell_size, -wrg.cell_size),
         dtype=wrg.data.dtype,
