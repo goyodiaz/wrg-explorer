@@ -95,7 +95,9 @@ def main():
 
     epsg_code = st.text_input(label="EPSG code")
     if epsg_code == "":
-        st.stop()
+        crs = None
+    else:
+        crs = rio.CRS.from_epsg(epsg_code)
 
     buf = io.BytesIO()
     with rio.open(
@@ -105,7 +107,7 @@ def main():
         width=wrg.nx,
         height=wrg.ny,
         count=1,
-        crs=rio.CRS.from_epsg(epsg_code),
+        crs=crs,
         transform=Affine.translation(xoff=left, yoff=top)
         * Affine.scale(wrg.cell_size, -wrg.cell_size),
         dtype=wrg.data.dtype,
