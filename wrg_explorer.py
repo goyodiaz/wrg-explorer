@@ -126,10 +126,13 @@ def main():
     ) as tds:
         tds.write(imdata[::-1, :], indexes=1)
 
+    variable = "_".join(variable.lower().split())
     if sector is None:
         file_name = f"{variable}.tif"
     else:
         file_name = f"{variable}_{sector:0>2}.tif"
+    file_name = st.text_input(label="File name", value=file_name)
+
     st.download_button(
         label="Download",
         data=buf.getvalue(),
