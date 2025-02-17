@@ -1,6 +1,6 @@
 affine<2.5
-matplotlib<3.10
+matplotlib<3.11
 pyproj<3.8
 rasterio<1.5
-streamlit<1.42
+streamlit<1.43
 wrg
