@@ -17,6 +17,7 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
 # MA 02110-1301, USA.
 
+import base64
 import io
 
 import matplotlib.pyplot as plt
@@ -37,6 +38,13 @@ def get_crss():
 def on_wrg_uploaded():
     if st.session_state.uploaded is not None:
         st.session_state.wrg = WRG.from_file(buf=st.session_state.uploaded)
+
+
+def display_fig(fig):
+    buf = io.BytesIO()
+    fig.savefig(buf, format="png", bbox_inches="tight", dpi=130)
+    html = f"""<img src="data:image/png;base64,{base64.b64encode(buf.getvalue()).decode()}">"""
+    st.markdown(html, unsafe_allow_html=True)
 
 
 def main():
@@ -95,9 +103,10 @@ def main():
     elif variable == "Directional frequency":
         sector = st.select_slider(label="Sector", options=range(wrg.nsectors))
         imdata = wrg.freq()[:, :, sector]
+
     im = ax.imshow(imdata, origin="lower", extent=(left, right, bottom, top))
     cbar = ax.figure.colorbar(im)
-    st.pyplot(ax.figure)
+    display_fig(ax.figure)
 
     pyproj_crs = st.selectbox(
         label="Coordinate reference system",
@@ -114,11 +123,13 @@ def main():
         width=wrg.nx,
         height=wrg.ny,
         count=1,
-        crs=rio.crs.CRS.from_authority(
-            auth_name=pyproj_crs.auth_name, code=pyproj_crs.code
-        )
-        if pyproj_crs
-        else None,
+        crs=(
+            rio.crs.CRS.from_authority(
+                auth_name=pyproj_crs.auth_name, code=pyproj_crs.code
+            )
+            if pyproj_crs
+            else None
+        ),
         transform=Affine.translation(xoff=left, yoff=top)
         * Affine.scale(wrg.cell_size, -wrg.cell_size),
         dtype=wrg.data.dtype,
