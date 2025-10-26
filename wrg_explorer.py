@@ -30,23 +30,6 @@ from wrg import WRG
 __version__ = "0.0.1.dev"
 
 
-@st.cache_resource
-def get_crss():
-    return pyproj.database.query_crs_info()
-
-
-def on_wrg_uploaded():
-    if st.session_state.uploaded is not None:
-        st.session_state.wrg = WRG.from_file(buf=st.session_state.uploaded)
-
-
-def display_fig(fig):
-    buf = io.BytesIO()
-    fig.savefig(buf, format="png", bbox_inches="tight", dpi=130)
-    html = f"""<img src="data:image/png;base64,{base64.b64encode(buf.getvalue()).decode()}">"""
-    st.markdown(html, unsafe_allow_html=True)
-
-
 def main():
     st.title("WRG explorer")
     uploaded = st.file_uploader(
@@ -150,6 +133,23 @@ def main():
         file_name=file_name,
         mime="image/tiff; application=geotiff",
     )
+
+
+@st.cache_resource
+def get_crss():
+    return pyproj.database.query_crs_info()
+
+
+def on_wrg_uploaded():
+    if st.session_state.uploaded is not None:
+        st.session_state.wrg = WRG.from_file(buf=st.session_state.uploaded)
+
+
+def display_fig(fig):
+    buf = io.BytesIO()
+    fig.savefig(buf, format="png", bbox_inches="tight", dpi=130)
+    html = f"""<img src="data:image/png;base64,{base64.b64encode(buf.getvalue()).decode()}">"""
+    st.markdown(html, unsafe_allow_html=True)
 
 
 if __name__ == "__main__":
