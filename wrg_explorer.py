@@ -60,7 +60,6 @@ def main():
             "Directional frequency",
         ],
     )
-    ax = plt.subplot()
     if variable == "Elevation":
         sector = None
         imdata = wrg.elev()
@@ -87,6 +86,7 @@ def main():
         sector = st.select_slider(label="Sector", options=range(wrg.nsectors))
         imdata = wrg.freq()[:, :, sector]
 
+    ax = plt.subplot()
     im = ax.imshow(imdata, origin="lower", extent=(left, right, bottom, top))
     cbar = ax.figure.colorbar(im)
     display_fig(ax.figure)
