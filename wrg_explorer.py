@@ -149,7 +149,7 @@ def display_fig(fig):
     buf = io.BytesIO()
     fig.savefig(buf, format="png", bbox_inches="tight", dpi=130)
     html = f"""<img src="data:image/png;base64,{base64.b64encode(buf.getvalue()).decode()}">"""
-    st.markdown(html, unsafe_allow_html=True)
+    st.html(html)
 
 
 if __name__ == "__main__":
