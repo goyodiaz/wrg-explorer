@@ -146,6 +146,7 @@ def on_wrg_uploaded():
 
 
 def display_fig(fig):
+    # Using st.pyplot or st.image leads to changes in image size for reasons still unknown.
     buf = io.BytesIO()
     fig.savefig(buf, format="png", bbox_inches="tight", dpi=130)
     html = f"""<img src="data:image/png;base64,{base64.b64encode(buf.getvalue()).decode()}">"""
