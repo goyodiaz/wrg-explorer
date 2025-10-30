@@ -21,6 +21,7 @@ import base64
 import io
 
 import matplotlib.pyplot as plt
+import pandas as pd
 import pyproj
 import rasterio as rio
 import streamlit as st
@@ -39,13 +40,20 @@ def main():
         st.stop()
 
     wrg = st.session_state.wrg
-    left, right, bottom, top = wrg.extent()
+    left, right, bottom, top = tuple(map(float, wrg.extent()))
 
-    st.markdown(f"Hub height: {wrg.hub_height()}")
-    st.markdown(f"Width: {wrg.nx}")
-    st.markdown(f"Height: {wrg.ny}")
-    st.markdown(f"Number of sectors: {wrg.nsectors}")
-    st.markdown(f"Left, right, bottom, top: {wrg.extent()}")
+    attrs = pd.Series(
+        {
+            "Hub height": wrg.hub_height(),
+            "Width:": wrg.nx,
+            "Height": wrg.ny,
+            "Number of sectors": wrg.nsectors,
+            "Left, right, bottom, top": [left, right, bottom, top],
+        },
+        name="",
+        dtype=str,
+    )
+    st.dataframe(attrs)
 
     variable = st.selectbox(
         label="Variable",
