@@ -94,10 +94,10 @@ def main():
         sector = st.select_slider(label="Sector", options=range(wrg.nsectors))
         imdata = wrg.freq()[:, :, sector]
 
-    ax = plt.subplot()
+    fig, ax = plt.subplots()
     im = ax.imshow(imdata, origin="lower", extent=(left, right, bottom, top))
-    cbar = ax.figure.colorbar(im)
-    display_fig(ax.figure)
+    cbar = fig.colorbar(im)
+    st.pyplot(fig)
 
     pyproj_crs = st.selectbox(
         label="Coordinate reference system",
@@ -151,14 +151,6 @@ def get_crss():
 def on_wrg_uploaded():
     if st.session_state.uploaded is not None:
         st.session_state.wrg = WRG.from_file(buf=st.session_state.uploaded)
-
-
-def display_fig(fig):
-    # Using st.pyplot or st.image leads to changes in image size for reasons still unknown.
-    buf = io.BytesIO()
-    fig.savefig(buf, format="png", bbox_inches="tight", dpi=130)
-    html = f"""<img src="data:image/png;base64,{base64.b64encode(buf.getvalue()).decode()}">"""
-    st.html(html)
 
 
 if __name__ == "__main__":
