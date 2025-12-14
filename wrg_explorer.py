@@ -28,7 +28,7 @@ import streamlit as st
 from affine import Affine
 from wrg import WRG
 
-__version__ = "0.1.0"
+__version__ = "0.1.0.dev0"
 
 
 def main():
